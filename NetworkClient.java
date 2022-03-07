@@ -1,13 +1,27 @@
 import java.net.*;
+import java.util.Scanner;
 import java.io.*;
 
-public class NetworkClient {
+public class NetworkClient implements Runnable {
     private int port;
     private Socket client;
+
+    volatile boolean keepRunning = true;
 
     public NetworkClient(int port) {
         this.port = port;
     }
+
+    public void run() {
+        while (keepRunning) {
+            try {
+                String message = readInput();
+                System.out.println("Message from server: " + message);
+            } catch (IOException e) {
+                System.out.println("Unhandled IOException: " + e);
+            }
+        }
+    } 
 
     public void connect(String serverName) {
         try {
@@ -54,8 +68,30 @@ public class NetworkClient {
         String serverName = args[0];
         int port = Integer.parseInt(args[1]);
         NetworkClient client = new NetworkClient(port);
-
+        
         client.connect(serverName);
-        client.sendMessage("Hello World!");
+
+        Thread clientThread = new Thread(client);
+
+        clientThread.start();
+        boolean keepAlive = true;
+        Scanner input = new Scanner(System.in);
+
+        while (keepAlive) {
+            System.out.print("\n» ");
+            while (!input.hasNextLine());
+            
+            switch (input.nextLine()) {
+                case "stop":
+                    keepAlive = false;
+                    break;
+                default:
+                    client.sendMessage(input.nextLine());
+            }
+        } 
+
+        input.close();
+        clientThread.interrupt();
+        client.terminate();
     }
 }

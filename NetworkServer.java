@@ -1,21 +1,26 @@
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.io.*;
 
-public class NetworkServer {
+public class NetworkServer implements Runnable {
     private int port;
     private ServerSocket server;
     private ArrayList<ClientSocket> threads;
+
+    volatile boolean keepRunning = true;
 
     public NetworkServer(int port) {
         this.port = port;
     }
 
-    public void init() {
+    public void run() {
         try {
             this.server = new ServerSocket(this.port);
 
-            while (true) {
+            System.out.println("Started server!");
+
+            while (keepRunning) {
                 Socket s = this.server.accept();
                 
                 ClientSocket thread = new ClientSocket(s);
@@ -50,11 +55,36 @@ public class NetworkServer {
     }
 
     public static void main(String[] args) {
-        String serverName = args[0];
-        int port = Integer.parseInt(args[1]);
-        NetworkClient client = new NetworkClient(port);
+        int port = Integer.parseInt(args[0]);
+        //int port = 2442;
+        NetworkServer server = new NetworkServer(port);
 
-        client.connect(serverName);
-        client.sendMessage("Hello World!");
+        Thread serverThread = new Thread(server);
+
+        serverThread.start();
+
+        boolean keepAlive = true;
+        Scanner input = new Scanner(System.in);
+
+        while (keepAlive) {
+            System.out.print("\n» ");
+            while (!input.hasNextLine());
+
+            String content = input.nextLine();
+
+            String[] components = content.split(" ", 2);
+
+            if (components[0].equals("exit")) {
+                keepAlive = false;
+            } else if (components[0].equals("broadcast")) {
+                server.broadcast(components[1]);
+            } else if (components[0].equals("message")) {
+                server.broadcast(components[1]);
+            }
+        } 
+
+        input.close();
+        serverThread.interrupt();
+        server.terminate();
     }
 }
