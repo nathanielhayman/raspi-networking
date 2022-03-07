@@ -1,12 +1,13 @@
 import java.net.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.io.*;
 
 public class NetworkServer implements Runnable {
     private int port;
     private ServerSocket server;
-    private ArrayList<ClientSocket> threads;
+    private HashMap<String, ClientSocket> threads;
 
     volatile boolean keepRunning = true;
 
@@ -25,7 +26,7 @@ public class NetworkServer implements Runnable {
                 
                 ClientSocket thread = new ClientSocket(s);
                 
-                this.threads.add(thread);
+                this.threads.put(thread.getIP(), thread);
                 thread.start();
             }  
         } catch (IOException e) {
@@ -33,13 +34,13 @@ public class NetworkServer implements Runnable {
         }
     }
 
-    public boolean sendMessage(String message, int index) {
-        return this.threads.get(index).sendMessage(message);
+    public boolean sendMessage(String message, String ip) {
+        return this.threads.get(ip).sendMessage(message);
     }
 
     public void broadcast(String message) {
         System.out.println("Broadcasing this message: " + message);
-        for (ClientSocket socket : this.threads) {
+        for (ClientSocket socket : this.threads.values()) {
             System.out.println(socket.sendMessage(message) 
                 ? "Updated client " + socket.getIP() : "Could not update " + socket.getIP());
         }
