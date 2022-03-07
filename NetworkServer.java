@@ -46,6 +46,14 @@ public class NetworkServer implements Runnable {
         }
     }
 
+    public void printClients() {
+        int i = 0;
+        for (ClientSocket socket : this.threads.values()) {
+            System.out.println(i + ": " + socket.getIP());
+            i++;
+        }
+    }
+
     public boolean terminate() {
         try {
             this.server.close();
@@ -81,6 +89,8 @@ public class NetworkServer implements Runnable {
                 server.broadcast(components[1]);
             } else if (components[0].equals("message")) {
                 server.broadcast(components[1]);
+            } else if (components[0].equals("clients")) {
+                server.printClients();
             }
         } 
 
