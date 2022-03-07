@@ -82,7 +82,7 @@ public class NetworkClient implements Runnable {
             while (!input.hasNextLine());
             
             switch (input.nextLine()) {
-                case "stop":
+                case "exit":
                     keepAlive = false;
                     break;
                 default:
